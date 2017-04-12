@@ -6,7 +6,11 @@ close all;
 fs = 5e3;       %switching frequency
 Ts=1/fs;
 
-D1 = [linspace(1e-3, 0.75, 50), linspace(0.75, 0.75, 100)];
+siklus=300;
+soft_start_siklus=50;
+duty=0.5;
+
+D1 = [linspace(1e-3, duty, soft_start_siklus), linspace(duty, duty, siklus-soft_start_siklus)];
 cycles = numel(D1);
 
 x = [0; 0];
@@ -27,13 +31,21 @@ for cc = 1:cycles
     m_state=horzcat(m_state,ones(1,numel(tode)-1));
 	
 	% OFF portion
-	[tode,xode,tOFF,iLoff] = ode45(@boostoff,[D1(cc)*Ts Ts],x(:,end),options);
+	[tode,xode,tOFF,xoff] = ode45(@boostoff,[D1(cc)*Ts Ts],x(:,end),options);
 	%ii = x(:,1) < 0;
 	t = horzcat(t, tode(2:end)'+((cc-1)*Ts));
 	x = horzcat(x, xode(2:end,:)');
 	n(cc) = n(cc) + numel(tode);
     m_state=horzcat(m_state,zeros(1,numel(tode)-1));
-	
+    
+    if (~isempty(tOFF))
+    [tode, xode] = ode45(@boostdcm, [tOFF Ts], x(:,end));
+    n(cc) = n(cc) + numel(tode);
+    t = horzcat(t, tode(2:end)'+(cc-1)*Ts);
+    x = horzcat(x, xode(2:end,:)');
+    m_state=horzcat(m_state,zeros(1,numel(tode)-1));
+	end;
+    
 end;
 m_state=horzcat(m_state,ones(1,1));
 %m_state=m_state(1:end-1);
@@ -49,7 +61,12 @@ xlabel('Time t');
 ylabel('Solution y');
 legend('iL','vC / vout','MOSFET state');
 
+sprintf('At t = %1.5f seconds the iL is %1.3f A.',tOFF/Ts,iLoff)
+
+
 'done'
+
+
 
 function [value,isterminal,direction] = iL_empty(t,x)
 % when value is equal to zero, an event is triggered.
