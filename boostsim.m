@@ -1,3 +1,5 @@
+function main
+
 clear all;
 close all;
 
@@ -13,6 +15,8 @@ n = [];
 
 m_state=[];
 
+options = odeset('Events',@iL_empty);
+
 for cc = 1:cycles
 
 	% ON portion
@@ -23,8 +27,8 @@ for cc = 1:cycles
     m_state=horzcat(m_state,ones(1,numel(tode)-1));
 	
 	% OFF portion
-	[tode, xode] = ode45(@boostoff, [D1(cc)*Ts Ts], x(:,end));
-	ii = x(:,1) < 0;
+	[tode,xode,tOFF,iLoff] = ode45(@boostoff,[D1(cc)*Ts Ts],x(:,end),options);
+	%ii = x(:,1) < 0;
 	t = horzcat(t, tode(2:end)'+((cc-1)*Ts));
 	x = horzcat(x, xode(2:end,:)');
 	n(cc) = n(cc) + numel(tode);
@@ -44,3 +48,18 @@ title('Boost Converter');
 xlabel('Time t');
 ylabel('Solution y');
 legend('iL','vC / vout','MOSFET state');
+
+'done'
+
+function [value,isterminal,direction] = iL_empty(t,x)
+% when value is equal to zero, an event is triggered.
+% set isterminal to 1 to stop the solver at the first event, or 0 to
+% get all the events.
+%  direction=0 if all zeros are to be computed (the default), +1 if
+%  only zeros where the event function is increasing, and -1 if only
+%  zeros where the event function is decreasing.
+value = x(1);  % when value = 0, an event is triggered
+isterminal = 1; % terminate after the first event
+direction = -1;  % get all the zeros
+% categories: ODEs
+% tags: reaction engineering
