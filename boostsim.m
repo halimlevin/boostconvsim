@@ -1,38 +1,46 @@
+clear all;
+close all;
+
 fs = 5e3;       %switching frequency
 Ts=1/fs;
-tspan = linspace(0,10*Ts,10000);
-[t,x] = ode45(@boost,tspan',[0; 0; 0]);
 
-plotyy(t,x(:,1),t,x(:,3));grid on;hold on;
-plot(t,x(:,2));grid on;
+D1 = [linspace(1e-3, 0.75, 50), linspace(0.75, 0.75, 100)];
+cycles = numel(D1);
 
+x = [0; 0];
+t = [0];
+n = [];
+
+m_state=[];
+
+for cc = 1:cycles
+
+	% ON portion
+	[tode, xode] = ode45(@booston, [0 D1(cc)*Ts], x(:,end));
+	t = horzcat(t, tode(2:end)'+((cc-1)*Ts));
+	x = horzcat(x, xode(2:end,:)');
+	n(cc) = numel(tode);
+    m_state=horzcat(m_state,ones(1,numel(tode)-1));
+	
+	% OFF portion
+	[tode, xode] = ode45(@boostoff, [D1(cc)*Ts Ts], x(:,end));
+	ii = x(:,1) < 0;
+	t = horzcat(t, tode(2:end)'+((cc-1)*Ts));
+	x = horzcat(x, xode(2:end,:)');
+	n(cc) = n(cc) + numel(tode);
+    m_state=horzcat(m_state,zeros(1,numel(tode)-1));
+	
+end;
+m_state=horzcat(m_state,ones(1,1));
+%m_state=m_state(1:end-1);
+
+iL = x(1,:);
+vC = x(2,:);
+
+plot(t,iL); hold on;
+plot(t,vC);
+plot(t,m_state*30);
 title('Boost Converter');
 xlabel('Time t');
 ylabel('Solution y');
-legend('iL','vC / vout')
-
-mean(x(:,1))
-mean(x(:,2))
-
-D = 0.7;      %duty cycle
-
-%PWM controller
-%figure;
-sizet=size(t);
-xt = linspace(0,10*Ts,sizet(1));
-pwm = t;
-Ts = 1/fs;
-duty = D*Ts;
-pwm = mod(t,Ts);
-%subplot(211);plot(xt,pwm,'*-');
-%xlim([0 5*Ts])
-
-for c=1:(sizet(1))
-    if pwm(c) > (duty)
-        pwm(c)=0;
-    else
-        pwm(c)=1;
-    end
-end
-
-%xlim([0 5*Ts])
+legend('iL','vC / vout','MOSFET state');
