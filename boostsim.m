@@ -12,10 +12,10 @@ fref = 50;      % reference frequency
 Vref = 220; % reference Voltage
 
 siklus=55;
-soft_start_siklus=50;
+softStartSiklus=50;
 duty=0.5;
 
-D1 = [linspace(1e-3, duty, soft_start_siklus), linspace(duty, duty, siklus-soft_start_siklus)];
+D1 = [linspace(1e-3, duty, softStartSiklus), linspace(duty, duty, siklus-softStartSiklus)];
 cycles = numel(D1);
 
 x = [0; 0];
@@ -28,30 +28,30 @@ options = odeset('Events',@iL_empty);
 sineref = [];
 errorplot=[];
 for cc = 1:cycles
-    cc
+  cc
     
-	% ON portion
-	[tode, xode] = ode45(@booston, [0 D1(cc)*Ts], x(:,end));
-	t = horzcat(t, tode(2:end)'+((cc-1)*Ts));
-	x = horzcat(x, xode(2:end,:)');
-	n(cc) = numel(tode);
-    m_state=horzcat(m_state,ones(1,numel(tode)-1));
-    tsine = tode(2:end)'+((cc-1)*Ts);
-    sinerefode = Vref*sin(2*pi*fref*tsine);
-    sineref = horzcat(sineref, abs(sinerefode));
-	
-	% OFF portion
-	[tode,xode,tOFF,xoff] = ode45(@boostoff,[D1(cc)*Ts Ts],x(:,end),options);
-	%ii = x(:,1) < 0;
-	t = horzcat(t, tode(2:end)'+((cc-1)*Ts));
-	x = horzcat(x, xode(2:end,:)');
-	n(cc) = n(cc) + numel(tode);
-    m_state=horzcat(m_state,zeros(1,numel(tode)-1));
-    tsine = tode(2:end)'+((cc-1)*Ts);
-    sinerefode = Vref*sin(2*pi*fref*tsine);
-    sineref = horzcat(sineref, abs(sinerefode));
-    
-    if (~isempty(tOFF))
+  % ON portion
+  [tode, xode] = ode45(@booston, [0 D1(cc)*Ts], x(:,end));
+  t = horzcat(t, tode(2:end)'+((cc-1)*Ts));
+  x = horzcat(x, xode(2:end,:)');
+  n(cc) = numel(tode);
+  m_state=horzcat(m_state,ones(1,numel(tode)-1));
+  tsine = tode(2:end)'+((cc-1)*Ts);
+  sinerefode = Vref*sin(2*pi*fref*tsine);
+  sineref = horzcat(sineref, abs(sinerefode));
+
+  % OFF portion
+  [tode,xode,tOFF,xoff] = ode45(@boostoff,[D1(cc)*Ts Ts],x(:,end),options);
+  %ii = x(:,1) < 0;
+  t = horzcat(t, tode(2:end)'+((cc-1)*Ts));
+  x = horzcat(x, xode(2:end,:)');
+  n(cc) = n(cc) + numel(tode);
+  m_state=horzcat(m_state,zeros(1,numel(tode)-1));
+  tsine = tode(2:end)'+((cc-1)*Ts);
+  sinerefode = Vref*sin(2*pi*fref*tsine);
+  sineref = horzcat(sineref, abs(sinerefode));
+
+  if (~isempty(tOFF))
     [tode, xode] = ode45(@boostdcm, [tOFF Ts], x(:,end));
     n(cc) = n(cc) + numel(tode);
     t = horzcat(t, tode(2:end)'+(cc-1)*Ts);
@@ -60,14 +60,14 @@ for cc = 1:cycles
     tsine = tode(2:end)'+((cc-1)*Ts);
     sinerefode = Vref*sin(2*pi*fref*tsine);
     sineref = horzcat(sineref, abs(sinerefode));
-	end;
-    
-    %Controller
-    error = max(0,(sineref(end) - x(2,end)))/sineref(end)*ones(1, n(cc)-3);
-    errorplot = horzcat(errorplot,error);
-    
-    errorInput = max(0.01, min(0.98, ( (sineref(end) - x(2, end))/sineref(end)*Kp )))
-    D1(cc+1) = errorInput;
+  end;
+
+  %Controller
+  error = max(0,(sineref(end) - x(2,end)))/sineref(end)*ones(1, n(cc)-3);
+  errorplot = horzcat(errorplot,error);
+
+  errorInput = max(0.01, min(0.98, ( (sineref(end) - x(2, end))/sineref(end)*Kp )))
+  D1(cc+1) = errorInput;
 end;
 m_state=horzcat(m_state,ones(1,1));
 sineref=horzcat(sineref,ones(1,1));
@@ -92,9 +92,7 @@ size(t)
 
 %sprintf('At t = %1.5f seconds the iL is %1.3f A.',tOFF/Ts,iLoff)
 
-
 'done'
-
 
 
 function [value,isterminal,direction] = iL_empty(t,x)
@@ -108,4 +106,5 @@ value = x(1);  % when value = 0, an event is triggered
 isterminal = 1; % terminate after the first event
 direction = -1;  % get all the zeros
 % categories: ODEs
-% tags: reaction engineering
+% tags: power electronic
+'done'
