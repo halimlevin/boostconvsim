@@ -61,8 +61,9 @@ xlabel('Time t');
 ylabel('Solution y');
 legend('iL','vC / vout','MOSFET state');
 
-sprintf('At t = %1.5f seconds the iL is %1.3f A.',tOFF/Ts,iLoff)
+%sprintf('At t = %1.5f seconds the iL is %1.3f A.',tOFF/Ts,iLoff)
 
+pwd
 
 'done'
 
