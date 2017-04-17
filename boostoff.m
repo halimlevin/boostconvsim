@@ -5,7 +5,7 @@ function dxdt = boost(t,x)
 %parameter
 R_L = 0.01;         %Inductor Series Resistance (Ohm)
 L = 50e-6;          %inductance (H)
-C = 100e-6;         %capacitance (F)
+C = 10e-6;         %capacitance (F)
 Rload = 195;        %load resistance (Ohm)
 Vin = 12;           %input voltage (Volt)
 Vd = 0.7;           %diode voltage drop (Volt)
