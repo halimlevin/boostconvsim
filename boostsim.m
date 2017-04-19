@@ -1,24 +1,23 @@
-function main
+function x = main
 
 clear all;
 close all;
 
-Kp = 7;     % Kp Controller
+Kp = 2;             % Kp Controller
 
-fs = 7e3;       %switching frequency
+fs = 1e3;           %switching frequency
 Ts=1/fs;
-fref = 50;      % reference frequency
-%Vref = 311.127; % reference Voltage
-Vref = 220; % reference Voltage
+fref = 50;          % reference frequency
+%Vref = 311.127;    % reference Voltage
+Vref = 220;         % reference Voltage
 
-
-siklus=40e-3/Ts;
-duty=0.5;
+siklus=10e-3/Ts;    % total cycle
+duty=0.5;           % duty cycle
 
 D1 = linspace(duty, duty, siklus);
 cycles = numel(D1);
 
-x = [0; 0];
+x = [0; 0; 0; 0];
 t = [0];
 n = [];
 
@@ -28,7 +27,7 @@ options = odeset('Events',@iL_empty);
 sineref = [];
 errorplot=[];
 for cc = 1:cycles
-     
+  cc
   % ON portion
   [tode, xode] = ode45(@booston, [0 D1(cc)*Ts], x(:,end));
   t = horzcat(t, tode(2:end)'+((cc-1)*Ts));
@@ -62,38 +61,43 @@ for cc = 1:cycles
   end;
 
   %Controller
-  
-  error = max(0,(sineref(end) - x(2,end)))/sineref(end)*ones(1, n(cc)-3);
+  %{
+  sineref(end) - x(3,end)
+  error = max(0,(sineref(end) - x(3,end)))/sineref(end)*ones(1, n(cc)-3);
   errorplot = horzcat(errorplot,error);
-
-  errorInput = max(0.01, min(0.98, ( (sineref(end) - x(2, end))/sineref(end)*Kp )));
+ 
+  errorInput = max(0.01, min(0.98, ( (sineref(end) - x(3, end))/sineref(end)*Kp )));
   D1(cc+1) = errorInput;
+  %}
 end;
 m_state=horzcat(m_state,ones(1,1));
-sineref=horzcat(sineref,ones(1,1));
-errorplot=horzcat(errorplot,ones(1,1));
+%sineref=horzcat(sineref,ones(1,1));
+%errorplot=horzcat(errorplot,ones(1,1));
 %m_state=m_state(1:end-1);
 cc
-size(errorplot)
+%size(errorplot)
 size(t)
 iL = x(1,:);
-vC = x(2,:);
+vC = x(3,:);
 
-plot(t,iL); hold on;
-plot(t,vC);
+subplot(211);
+plot(t,min(0,max(25, iL))); hold on;
 plot(t,m_state*30); grid on;
-plot(t,sineref);
-plot(t,errorplot*100);
+subplot(212);
+plot(t,min(0,max(20, vC)));grid on;
+
+%plot(t,sineref);
+%plot(t,errorplot*100);
 title('Boost Converter');
 xlabel('Time t');
 ylabel('Solution y');
-legend('iL','vC / vout','MOSFET state','Vref','Error');
+% legend('iL','vC / vout','MOSFET state','Vref','Error');
 
 
 %sprintf('At t = %1.5f seconds the iL is %1.3f A.',tOFF/Ts,iLoff)
 
-'done'
-
+end
+x=ans;
 
 function [value,isterminal,direction] = iL_empty(t,x)
 % when value is equal to zero, an event is triggered.
@@ -107,4 +111,4 @@ isterminal = 1; % terminate after the first event
 direction = -1;  % get all the zeros
 % categories: ODEs
 % tags: power electronic
-'done'
+end
