@@ -17,7 +17,7 @@ duty=0.5;           % duty cycle
 D1 = linspace(duty, duty, siklus);
 cycles = numel(D1);
 
-x = [0; 0; 0; 0];
+x = [0; 0; 0];
 t = [0];
 n = [];
 
@@ -77,14 +77,16 @@ m_state=horzcat(m_state,ones(1,1));
 cc
 %size(errorplot)
 size(t)
-iL = x(1,:);
-vC = x(3,:);
+iLout = x(1,:);
+iL = x(3,:);
+Rload = 195;        %load resistance (Ohm)
+vLoad = iLout*Rload;
 
 subplot(211);
-plot(t,min(0,max(25, iL))); hold on;
+plot(t,min(0,max(25, iLout))); hold on;
 plot(t,m_state*30); grid on;
 subplot(212);
-plot(t,min(0,max(20, vC)));grid on;
+plot(t,min(0,max(20, vLoad)));grid on;
 
 %plot(t,sineref);
 %plot(t,errorplot*100);
@@ -97,7 +99,7 @@ ylabel('Solution y');
 %sprintf('At t = %1.5f seconds the iL is %1.3f A.',tOFF/Ts,iLoff)
 
 end
-x=ans;
+
 
 function [value,isterminal,direction] = iL_empty(t,x)
 % when value is equal to zero, an event is triggered.
