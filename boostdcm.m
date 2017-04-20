@@ -13,7 +13,7 @@ Vin = 12;           %input voltage (Volt)
 Vd = 0.7;           %diode voltage drop (Volt)
 
 A  = [0 1 0;
-      1/(C*Lout) -Rload/Lout 0;
+      -1/(C*Lout) -Rload/Lout 0;
       0 0  0 ];
 B1 = [0; 0; 0];
 B2 = [0; 0; 0];

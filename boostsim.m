@@ -1,33 +1,34 @@
-function x = main
+function stateout = main();
 
 clear all;
 close all;
 
-Kp = 2;             % Kp Controller
+Kp = 3;             % Kp Controller
 
-fs = 1e3;           %switching frequency
+fs = 5e3;           %switching frequency
 Ts=1/fs;
 fref = 50;          % reference frequency
 %Vref = 311.127;    % reference Voltage
 Vref = 220;         % reference Voltage
 
-siklus=10e-3/Ts;    % total cycle
+siklus=40e-3/Ts;    % total cycle
 duty=0.5;           % duty cycle
 
 D1 = linspace(duty, duty, siklus);
 cycles = numel(D1);
 
+
 x = [0; 0; 0];
 t = [0];
 n = [];
-
+Rload = 195;        %load resistance (Ohm)
 m_state=[];
 
 options = odeset('Events',@iL_empty);
 sineref = [];
 errorplot=[];
 for cc = 1:cycles
-  cc
+  sprintf('Iterasi ke %d dari %d',cc,cycles)
   % ON portion
   [tode, xode] = ode45(@booston, [0 D1(cc)*Ts], x(:,end));
   t = horzcat(t, tode(2:end)'+((cc-1)*Ts));
@@ -61,42 +62,43 @@ for cc = 1:cycles
   end;
 
   %Controller
-  %{
-  sineref(end) - x(3,end)
-  error = max(0,(sineref(end) - x(3,end)))/sineref(end)*ones(1, n(cc)-3);
+  
+  sineref(end) - x(1,end)*Rload;
+  error = max(0,(sineref(end) - x(1,end)*Rload))/sineref(end)*ones(1, n(cc)-3);
   errorplot = horzcat(errorplot,error);
  
-  errorInput = max(0.01, min(0.98, ( (sineref(end) - x(3, end))/sineref(end)*Kp )));
+  errorInput = max(0.001, min(0.98, ( (sineref(end) - x(1, end)*Rload)/sineref(end)*Kp )));
   D1(cc+1) = errorInput;
-  %}
+  
 end;
 m_state=horzcat(m_state,ones(1,1));
-%sineref=horzcat(sineref,ones(1,1));
-%errorplot=horzcat(errorplot,ones(1,1));
+sineref=horzcat(sineref,ones(1,1));
+errorplot=horzcat(errorplot,ones(1,1));
 %m_state=m_state(1:end-1);
 cc
 %size(errorplot)
 size(t)
 iLout = x(1,:);
 iL = x(3,:);
-Rload = 195;        %load resistance (Ohm)
+
 vLoad = iLout*Rload;
 
-subplot(211);
-plot(t,min(0,max(25, iLout))); hold on;
-plot(t,m_state*30); grid on;
-subplot(212);
-plot(t,min(0,max(20, vLoad)));grid on;
+plot(t,iLout); hold on;
+plot(t,iL); 
+plot(t,m_state*30); 
+plot(t,vLoad);grid on;
 
-%plot(t,sineref);
+plot(t,sineref);
 %plot(t,errorplot*100);
 title('Boost Converter');
 xlabel('Time t');
-ylabel('Solution y');
-% legend('iL','vC / vout','MOSFET state','Vref','Error');
+legend('iLout','iL','MOSFET state','vLoad','Vref');
+%legend('iLout', 'iL', 'MOSFET state','vLoad');
 
 
 %sprintf('At t = %1.5f seconds the iL is %1.3f A.',tOFF/Ts,iLoff)
+
+stateout = [t;x];
 
 end
 
@@ -108,7 +110,7 @@ function [value,isterminal,direction] = iL_empty(t,x)
 %  direction=0 if all zeros are to be computed (the default), +1 if
 %  only zeros where the event function is increasing, and -1 if only
 %  zeros where the event function is decreasing.
-value = x(1);  % when value = 0, an event is triggered
+value = x(3);  % when value = 0, an event is triggered
 isterminal = 1; % terminate after the first event
 direction = -1;  % get all the zeros
 % categories: ODEs

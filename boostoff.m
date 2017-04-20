@@ -13,8 +13,8 @@ Vin = 12;           %input voltage (Volt)
 Vd = 0.7;           %diode voltage drop (Volt)
 
 A  = [0 1 0;
-      1/(C*Lout) -Rload/Lout -1/(C*Lout);
-      -Rload/L (-Lout/L)  (-R_L/L) ];
+      -1/(C*Lout) -Rload/Lout 1/(C*Lout);
+      -Rload/L -(Lout/L)  (-R_L/L) ];
 B1 = [0; 0; (1/L)];
 B2 = [0; 0; 0];
 dxdt = A*x + B1*Vin + B2*Vd ;  
